@@ -247,7 +247,44 @@ export const parkingSpotsService = {
         callback(spots);
       });
     }
+  },
+
+  //get fraud data
+    getFraudReportedLocations: async () => {
+    try {
+      const spotsRef = collection(db, 'fraudReports');
+      const q = query(spotsRef, orderBy('timestamp'));
+      const snapshot = await getDocs(q);
+      
+      console.log('fraudReportsParking spots found:', snapshot.size);
+      const spots = snapshot.docs.map(doc => {
+        const data = doc.data();
+        console.log(`fraudReports ${doc.id}:`, data);
+        return {
+          id: doc.id,
+          ...data
+        };
+      });
+      
+      return spots;
+    } catch (error) {
+      console.error('Error getting fraudReports spots:', error);
+      
+      // If ordering fails, try without order
+      if (error.code === 'failed-precondition') {
+        console.log('Retrying without orderBy...');
+        const spotsRef = collection(db, 'fraudReports');
+        const snapshot = await getDocs(spotsRef);
+        return snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+      }
+      
+      throw error;
+    }
   }
+
 };
 
 // Analytics/Stats - UPDATED to be consistent
