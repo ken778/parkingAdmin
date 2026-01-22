@@ -291,13 +291,16 @@ export const parkingSpotsService = {
 export const statsService = {
   getDashboardStats: async () => {
     try {
-      const [usersSnapshot, spotsSnapshot] = await Promise.all([
+      const [usersSnapshot, spotsSnapshot, fraudSnapShot] = await Promise.all([
         getDocs(collection(db, 'users')),
-        getDocs(collection(db, 'parkingLocations')) // Changed to parkingLocations
+        getDocs(collection(db, 'parkingLocations')),
+        getDocs(collection(db, 'fraudReports')),
+        
       ]);
 
       const totalUsers = usersSnapshot.size;
       const totalSpots = spotsSnapshot.size;
+      const reportedIssue = fraudSnapShot.size;
       
       // Count available spots
       const availableSpots = spotsSnapshot.docs.filter(
@@ -305,7 +308,7 @@ export const statsService = {
       ).length;
 
       // Count spots with reports
-      const reportedSpots = spotsSnapshot.docs.filter(
+      const reportedIssues = fraudSnapShot.docs.filter(
         doc => doc.data().reports && doc.data().reports > 0
       ).length;
 
@@ -313,7 +316,7 @@ export const statsService = {
         totalUsers,
         totalParkingSpots: totalSpots,
         activeSpots: availableSpots,
-        reportedIssues: reportedSpots
+        reportedIssues: reportedIssues
       };
     } catch (error) {
       console.error('Error getting stats:', error);
